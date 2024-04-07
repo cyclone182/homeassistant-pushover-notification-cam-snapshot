@@ -1,0 +1,65 @@
+alias: pushover_doorbell_snapshot
+description: ""
+trigger:
+  - type: occupied
+    platform: device
+    device_id: d7ef4754ccf4fa9732c35d7cf38bb014
+    entity_id: binary_sensor.front_porch_door_zone_person_occupancy
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+    id: Front Porch Zone Trigger
+  - platform: state
+    entity_id:
+      - binary_sensor.doorbell_doorbell_cam
+    to: "on"
+condition:
+  - type: is_not_open
+    condition: device
+    device_id: 95b1ce80e4173cce21a1d04a49f8bdca
+    entity_id: binary_sensor.door_window_sensor
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+action:
+  - if:
+      - condition: trigger
+        id: Front Porch Zone Trigger
+    then:
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 0
+          milliseconds: 500
+  - repeat:
+      count: "5"
+      sequence:
+        - service: camera.snapshot
+          data:
+            filename: /config/www/tmp/doorbell_close_up.jpg
+          target:
+            entity_id: camera.doorbell_cam_frigate
+        - service: notify.pushover
+          data:
+            data:
+              sound: bugle
+              priority: 0
+              attachment: /config/www/tmp/doorbell_close_up.jpg
+            title: Doorbell Cam Detection
+            message: Person at Front Door
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 0
+            milliseconds: 500
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+mode: parallel
+max: 2
